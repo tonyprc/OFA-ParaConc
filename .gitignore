@@ -1,0 +1,7 @@
+.idea/
+*.imp
+savedfiles/*
+!savedfiles/.gitkeep
+app_data/corpus/*
+!app_data/corpus/sample_*.json
+venv/

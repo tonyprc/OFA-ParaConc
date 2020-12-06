@@ -94,4 +94,4 @@
 ---
 
 ### 软件图标
-![](app_data/workfiles/myIcon.png)  
+![](./app_data/workfiles/myIcon.png)  

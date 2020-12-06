@@ -8,6 +8,6 @@ pywin32==300
 six==1.15.0
 pandas==1.1.4
 numpy==1.19.4
-pypinyin==0.35.1
+xpinyin==0.5.7
 xlrd==1.2.0
 pyinstaller==4.0

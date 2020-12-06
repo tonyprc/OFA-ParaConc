@@ -1,5 +1,5 @@
 # OFA-ParaConc
-# 傲飞一对多平行检索工具（OFA ParaConc）
+# 傲飞一对多平行检索工具
 ## English-Chinese One to Many Concordancer
 
 ### 软件概况

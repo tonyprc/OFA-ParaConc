@@ -83,10 +83,6 @@
 #### 第三方库列表
 [requirements.txt](requirements.txt) 
 
-#### 第三方库安装
-
-`> pip install pyqt5`
-
 #### 打包软件安装
 
 `> pip install pyinstaller`

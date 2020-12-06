@@ -20,9 +20,7 @@ class SearchResultConverter:
         return self._source_note_zh(article_result, show_title, show_author)
 
     def _source_note_en(self, article_result: ArticleResult, show_title: bool, show_author: bool):
-        # 篇章标题 等于 语料结果的篇章标题
         chapter_title = article_result.chapter_title
-        # 如果篇章标题为"FULL TEXT"或者篇章标题语料结果标题，篇章标题为空
         if chapter_title == 'FULL TEXT' or chapter_title.lower() == article_result.title.lower():
             chapter_title = ''
         result = ''

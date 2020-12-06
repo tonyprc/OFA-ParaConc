@@ -28,7 +28,6 @@ class PandasHtmlConverter(SearchResultConverter):
             if show_context_original:
                 context_line = ''
                 for i_match, match in enumerate(item.original.matches):
-                    # 通过判断结果数量，确定是否为段落结果
                     if len(item.original.matches)==1:
                         context_line=''
                     else:
@@ -36,7 +35,7 @@ class PandasHtmlConverter(SearchResultConverter):
                             context_line += '<font color="blue">' + item.original.lines[i_match] + '</font>'
                         else:
                             context_line += item.original.lines[i_match]
-                # 如果是段落结果，不参与语境展示
+
                 if context_line:
                     context_line += ' <i><font color="grey" size=3>' + self.source_note(item.original, show_source_title, show_source_author) + '</font></i>'
                     num_list.append(i_num)

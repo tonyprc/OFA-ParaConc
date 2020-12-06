@@ -19,102 +19,58 @@ class Searcher:
         return self._search_en(corpora, req)
 
     def _search_en(self, corpora: [], req: SearchRequest) -> SearchResult:
-        # 搜索只返回数据结构，不包含展示样式
-        # 这样才能使得展示方式的变动（html -> rtf）不会影响搜索代码
-        # 要返回的检索结果，结构为self.items列表，列表内部为原文articleResult()与译文结果列表
-        # ArticelResult为单个语料的键名，标题，作译者，句子列表，匹配结果列表
         result = SearchResult()
         # 依据检索模式处理检索词
         query = self._build_query(req.q, req.mode)
         for corpus in corpora:
-            # 遍历语料库，如果语料不符合检索条件，返回值为假，则跳过
-            # 判断 corpus 是否符合搜索范围，不符合直接判断下一个
-            # 重点：不看 _match_corpus 的实现代码，把 corpus 判断抽取为独立方法就是为了在阅读整体逻辑时不用去考虑实现细节
             if not self._match_corpus(corpus, req):
                 continue
             # 提取单一语料原文
             article = corpus.original            
-            # 遍历原文各章节
-            # 判断原文 chapter 是否符合搜索条件
-            # 同样，在这时候不要去看 _match_chapter 的具体实现
             for chapter in article.chapters:
                 # 章节不符合检索条件，跳过
                 if not self._match_chapter(chapter, req):
                     continue
                 # 遍历章节中的段落
-                # 之前的每行文本，这里对应为 paragraph
-                # 每行使用竖线(|)，标记文本对齐。这里已经提前将文本按照竖线做过拆分，拆分后的每一项放入 paragraph.lines
                 for paragraph in chapter.paragraphs:
                     # 遍历段落中的句子
                     for i_line in range(len(paragraph.lines)):
                         # 按句子键取出句子
                         line = paragraph.lines[i_line]
                         # region 遍历搜索
-                        # 这里的 # region 是 PyCharm 做文本折叠的标记。左边行号右边有个折叠标签，对应下面 # endregion
-                        # 折叠的目的是为了看代码时能够把不关心的东西先隐藏起来
                         # 对句子进行检索
                         for match in re.finditer(query, line):
-                            # 执行到这里说明：原文和译文同时满足搜索条件，并且原文的 line 匹配到搜索词
-                            # 这时，创建一个搜索结果项目 SearchResultItem
                             result_item = SearchResultItem()
-                            # 放入当前语料原文（包括键名，标题，作译者）
                             result_item.original.assign_from(article)
-                            # 放入当前语料篇章标题
                             result_item.original.chapter_title = chapter.title
-                            # 按段内句子数编号，将句子键值对放入相应段落句子列表
                             for i in range(len(paragraph.lines)):
-                                # 遍历原文 paragraph 的每一行，放入结果的 original.lines。这个作为原文的语境
-                                # 不管显示方式是否选择了“显示语境”，统一放进去，searcher 不关心这些。converter 根据显示方式来拼接 html
                                 result_item.original.lines.append(paragraph.lines[i])
-                                # 如果当前句号与本段第一句，放入对齐句坐标，否则略过
-                                # 如果当前行是搜索词匹配的行，就放入一个 MatchResult，这个用来记录匹配词在 line 中的位置，start, end
                                 if i == i_line:
                                     result_item.original.matches.append(MatchResult(match.start(), match.end()))
                                 else:
-                                    # 如果当前行不是搜索词匹配的行，就放入一个 None，这样保证 result_item.original.matches 的长度与 lines 相同
-                                    # converter 在判断 line 是否有匹配词的时候只需要判断对应的 matches 是否为 None 就可以，不需要额外记录匹配词所在的 line
                                     result_item.original.matches.append(None)
                             # 对于当前句检索结果，遍历所有译本，不符合译本检索条件的略过
-                            # 译文是否符合搜索条件
                             for translation in corpus.translations:
                                 if not self._match_translation(translation, req):
                                     continue
                                 try:
-                                    # 利用原文段键尝试提取相应译文段
-                                    # 译文对应的原文 paragraph
                                     trans_paragraph = translation.get_paragraph(paragraph.key)
                                     if trans_paragraph is not None:
-                                        # 如果存在，建立译文单篇检索结果对象
-                                        # 译文如果没有翻译原文对应的这一个 paragraph，则 trans_paragraph 为 None
                                         trans_result = ArticleResult()
-                                        # 放入译本信息（包括键名，标题，作译者）
                                         trans_result.assign_from(translation)
-                                        # 放入译本章节标题
                                         trans_result.chapter_title = trans_paragraph.chapter.title
                                         # 遍历译本段落内所有句子
                                         for i in range(len(trans_paragraph.lines)):
-                                            # 为每句建立行号与句子键值
-                                            # 译文语境，不管显示方式，统一放入
                                             trans_line = trans_paragraph.lines[i]
-                                            # 将按行号提取出的句子放入各段的句子列表
                                             trans_result.lines.append(trans_line)
-                                            # 如果行号与原文行号相同，放入句子匹配结果坐标(0,句长），否则略过
-                                            # 如果译文当前 line 是原文匹配词出现的 line，则添加一个 MatchResult
-                                            # 中文不能判断词出现的位置，MatchResult 简化为全行匹配
                                             if i == i_line:
-                                                # trans_result.matches.append(MatchResult(0, len(trans_line)))
-                                                # trans_result.matches.append(None)
                                                 trans_result.matches.append(MatchResult(0, 0))
                                             else:
                                                 trans_result.matches.append(None)
-                                        # 如果存在翻译检索索句子列表，向单项检索结果列表中填加译本检索结果
-                                        # 如果原文根据搜索条件没有相应的译文，就忽略这个搜索结果
-                                        # 如果译文有匹配，就加到结果中
                                         if len(trans_result.lines):
                                             result_item.translations.append(trans_result)
                                 except Exception as e:
                                     print(e)
-                            # 如果译本检索结果项存在，将所有检索结果项填加给检索结果
                             if len(result_item.translations):  # 没有译文的跳过
                                 result.items.append(result_item)
                         # endregion
@@ -172,7 +128,7 @@ class Searcher:
                                 
         return result
 
-    # 语言检测，检测输入是中文还是英文
+    # 语言检测
     def detect_lang(self, text):
         target_lang = 'en'
         for word in text:

@@ -1,7 +1,7 @@
 # OFA-ParaConc
 # 傲飞一对多平行检索工具
 ## English-Chinese One to Many Concordancer
-
+![software_interface](https://github.com/tonyprc/OFA-ParaConc/blob/main/img_storage/software_cover.png)
 ### 软件概况
 
 傲飞一对多平行检索工具（OFA ParaConc）是一款依托语料库检索便利翻译人进行英汉翻译多版本学习或研究的辅助类开源软件。

@@ -280,8 +280,6 @@ class UIMainWindow(QMainWindow):
 
         self._corpus = None
 
-        # todo win10 150% 的设置下，字显示不全。发布的时候这几行注释掉
-        # 不知道 Qt 的支持怎么样，上次测试 KDE 对高分屏的支持就很烂
         self._left_frame_a.setMaximumWidth(350)
         self._json_list_window.setMaximumWidth(340)
         self._left_frame_b.setMaximumWidth(350)
@@ -292,10 +290,6 @@ class UIMainWindow(QMainWindow):
                 <body><img src="frontPage.png"/></body></html>'''
         html=html.replace('frontPage.png',img)
         self._result_window.setHtml(html)
-        #QWebEngineView网页加载方式
-        #self._result_window.load(QUrl(page.replace("\\", "/")))
-        #with open (page,mode='r',encoding='utf-8') as f:
-        #    html=f.read()
 
     # 设置语料列表
     def set_titles(self, titles: []):
@@ -322,10 +316,6 @@ class UIMainWindow(QMainWindow):
     def set_status_text(self, text):
         self._statusBar.showMessage(text, 10000)
 
-    # 提取当前语料并展示语料概况
-    # 这里传入 corpus 对象，使得 ui 类依赖与 corpus 结构。这种做法不好，应该每个字段单独设置，使得 ui 不需要了解 corpus 的结构
-    # 另一种做法是传递 dict，读取 key 之后分别设置
-    # 这里没有采用第二种方法完全是懒，不想额外去一个个写了
     def set_corpus(self, corpus):
         self._corpus = corpus
         self._ss_book_titleBox.setText(corpus.original.title)
@@ -351,15 +341,9 @@ class UIMainWindow(QMainWindow):
             return SearchMode.REGEX
         return SearchMode.EXTENDED
 
-    # 搜索关键词
     def search_text(self):
         return self._input_box.text()
 
-    # 检索范围
-    # 全部语料：         返回 (SearchType.CORPUS_KEY, '')
-    # 当前语料，全部译本： 返回 (SearchType.CORPUS_KEY, Corpus.key)
-    # 当前语料，当前译本： 返回 (SearchType.ARTICLE_KEY, (Corpus.key, Article.key, [Chapter.title]))
-    # 作者、译者、类型：   返回 (对应SearchType, 选项文本)
     def search_type(self) -> ():
         # 全部语料
         if self._src_scope_1.isChecked():
@@ -391,15 +375,12 @@ class UIMainWindow(QMainWindow):
     def set_result_html(self, html):
         self._result_window.setHtml(html)
 
-    # 显示方式：展示语境
     def display_context(self):
         return self._display_context_choice.currentText() if self._display_context_button.isChecked() else ''
 
-    # 显示方式：隐藏语源
     def display_source(self):
         return self._display_source_choice.currentText() if self._display_source_button.isChecked() else ''
 
-    # 软件概况
     def _info(self):
         QMessageBox.about(self, "About Us",
                           '''<p align='center'>傲飞一对多平行检索工具<br>
@@ -409,15 +390,12 @@ class UIMainWindow(QMainWindow):
                           软件制作：张修海 抚顺师范高等专科学校外语系<br>
                           电子邮件：42716403@qq.com</p>''')
 
-    # 提取当前语料并展示语料概况
     def _json_list_window_item_double_clicked(self, item):
         self.load_corpus.emit(item.text())
 
-    # 将点击的语料全文加载到独立弹窗
     def _ss_book_contentsBox_double_clicked(self, item):
         self.view_chapter.emit(self._corpus.original.title, item.text())
 
-    # 译本、译者 下拉框联动
     def _version_change_info(self, i):
         if self._tt_book_listBox.currentIndex() != -1:
             self._src_translator_opt.setCurrentText(self._tt_book_listBox.currentData().translator)

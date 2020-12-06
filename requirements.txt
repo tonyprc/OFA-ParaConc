@@ -1,0 +1,13 @@
+﻿PyQt5==5.15.1
+PyQt5-sip==12.8.1
+PyQt5-stubs==5.14.2.2
+python-docx==0.8.10
+lxml==4.6.1
+python-dotenv==0.15.0
+pywin32==300
+six==1.15.0
+pandas==1.1.4
+numpy==1.19.4
+pypinyin==0.35.1
+xlrd==1.2.0
+pyinstaller==4.0

@@ -403,7 +403,7 @@ class UIMainWindow(QMainWindow):
                              OFA ParaConc<br>
                             Windows 试用版 V.1.0.0<br>
                           英语快餐厅 版权所有<br>
-                          软件制作：张修海 抚顺师范高等专科学校外语系<br>
+                          软件制作：张修海 抚顺职业技术学院（抚顺师专）外语系<br>
                           电子邮件：42716403@qq.com</p>''')
 
     def _json_list_window_item_double_clicked(self, item):

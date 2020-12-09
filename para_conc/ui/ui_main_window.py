@@ -267,14 +267,14 @@ class UIMainWindow(QMainWindow):
         # ----------创建主窗口状态栏----------
         self._statusBar = QStatusBar()
         self._statusBar.showMessage('欢迎使用 傲飞一对多平行检索工具 V.1.0.0')
-        self._copyRightLabel = QLabel("Copyright © OFA ParaConc Since 2020")
+        self._copyRightLabel = QLabel("© 2020 英语快餐厅 版权所有")
         self._statusBar.addPermanentWidget(self._copyRightLabel)
         self.setStatusBar(self._statusBar)
 
         # ----------设置页面尺寸及标题等----------
         self.setGeometry(200, 50, 900, 610)
         self.setObjectName("MainWindow")
-        self.setWindowTitle("OFA ParaConc")
+        self.setWindowTitle("傲飞检索")
         currentDir = os.getcwd()
         # self.setWindowIcon(QIcon("./app_data/workfiles/myIcon.png"))
         self.setWindowIcon(QIcon(currentDir + "/app_data/workfiles/myIcon.png"))
@@ -399,7 +399,7 @@ class UIMainWindow(QMainWindow):
 
     def _info(self):
         QMessageBox.about(self, "About Us",
-                          '''<p align='center'>傲飞一对多平行检索工具<br>
+                          '''<p align='center'>傲飞一对多平行检索工具（傲飞检索）<br>
                              OFA ParaConc<br>
                             Windows 试用版 V.1.0.0<br>
                           英语快餐厅 版权所有<br>

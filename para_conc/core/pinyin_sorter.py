@@ -1,5 +1,5 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2020 Tony96163 (42716403@qq.com)
 
 # Disclaimer:
 

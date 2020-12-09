@@ -5,3 +5,4 @@ savedfiles/*
 app_data/corpus/*
 !app_data/corpus/sample_*.json
 venv/
+!para_conc/core/ui/ui_main_window_en.py

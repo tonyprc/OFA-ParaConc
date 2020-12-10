@@ -16,18 +16,32 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import os,json
 from PyQt5.QtWidgets import QMainWindow, QTextEdit
 
 
 class SubWindow(QMainWindow):
     def __init__(self, parent=None):
         super(SubWindow, self).__init__(parent)
-        self.setWindowTitle('全文')
+        currentDir = os.getcwd()
+        dataDir = os.path.join(currentDir, "app_data")
+        workFileDir = os.path.join(dataDir, "workfiles")
+        self._interface_lang_file = os.path.join(workFileDir,'interface_language_setting.txt')
+        self._interface_lang_dict = os.path.join(workFileDir,'interface_language_dict.json')
+        self.fc_lg, self.fc_dict = self.set_lang()
+        
+        self.setWindowTitle(self.fc_dict['sub_full_text'][self.fc_lg])
         self.setGeometry(100, 100, 400, 400)
         self._browser = QTextEdit(self)
         self.setCentralWidget(self._browser)
-
+        
+    def set_lang(self):
+        with open (self._interface_lang_file, mode = 'r', encoding = 'utf-8-sig') as f:
+            default_lg = f.read().strip()
+        with open (self._interface_lang_dict, mode = 'r', encoding = 'utf-8-sig') as f:
+            lg_dict = json.loads(f.read())
+        return default_lg, lg_dict
+    
     def set_title(self, title):
         self.setWindowTitle(title)
 

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import os
+import os,json
 
 from PyQt5.QtCore import Qt, QSize, pyqtSignal
 from PyQt5.QtGui import QIcon
@@ -28,49 +28,55 @@ from PyQt5.QtWidgets import (QMainWindow, QGridLayout, QHBoxLayout, QVBoxLayout,
 
 from para_conc.core.search.search import SearchMode, SearchType
 
-
 class UIMainWindow(QMainWindow):
+    #set_lang = pyqtSignal()
     save_text = pyqtSignal()
     save_html = pyqtSignal()
     search = pyqtSignal()
     print_result = pyqtSignal()
     load_corpus = pyqtSignal(str)
-    view_chapter = pyqtSignal(str, str)  # corpus title, chapter title
+    view_chapter = pyqtSignal(str, str)  # corpus title, chapter title    
 
     def __init__(self, parent=None):
         super(UIMainWindow, self).__init__(parent)
-
+        currentDir = os.getcwd()
+        dataDir = os.path.join(currentDir, "app_data")
+        workFileDir = os.path.join(dataDir, "workfiles")
+        self._interface_lang_file = os.path.join(workFileDir,'interface_language_setting.txt')
+        self._interface_lang_dict = os.path.join(workFileDir,'interface_language_dict.json')
+        self.fc_lg, self.fc_dict = self.set_lang()
+    
         # region create window
-        aboutAction = QAction('关于本软件', self)
+        aboutAction = QAction(self.fc_dict['menu_about_item'][self.fc_lg], self)
         aboutAction.triggered.connect(self._info)        
-        aboutAction.setStatusTip('查看软件制作信息')        
+        aboutAction.setStatusTip(self.fc_dict["menu_about_tip"][self.fc_lg])        
       
-        outTxtAction = QAction('输出TXT文件', self) 
+        outTxtAction = QAction(self.fc_dict["menu_output_txt"][self.fc_lg], self) 
         
         outTxtAction.triggered.connect(self.save_text)
-        outTxtAction.setStatusTip('将当前检索结果输出为txt文件')
-        outHtmlAction = QAction('输出HTML文件', self)
+        outTxtAction.setStatusTip(self.fc_dict["menu_output_txt_tip"][self.fc_lg])
+        outHtmlAction = QAction(self.fc_dict["menu_output_html"][self.fc_lg], self)
         outHtmlAction.triggered.connect(self.save_html)
-        outHtmlAction.setStatusTip('将当前检索结果输出为html文件')
+        outHtmlAction.setStatusTip(self.fc_dict["menu_output_html_tip"][self.fc_lg])
 
         menubar = self.menuBar()
         menubar.setContextMenuPolicy(Qt.PreventContextMenu)
-        fileMenu = menubar.addMenu('文件')
-        fileMenu_saveGroup = fileMenu.addMenu('输出语料')
+        fileMenu = menubar.addMenu(self.fc_dict['menu_file'][self.fc_lg])
+        fileMenu_saveGroup = fileMenu.addMenu(self.fc_dict["menu_output"][self.fc_lg])
         fileMenu_saveGroup.addAction(outTxtAction)
         fileMenu_saveGroup.addAction(outHtmlAction)
-        infoMenu = menubar.addMenu('关于')
+        infoMenu = menubar.addMenu(self.fc_dict['menu_about'][self.fc_lg])
         infoMenu.addAction(aboutAction)
 
         self._left_frame_layout = QVBoxLayout()
 
-        self._left_frame_a = QGroupBox('语料列表')
+        self._left_frame_a = QGroupBox(self.fc_dict["corpora_list"][self.fc_lg])
         self._left_frame_a.setMaximumWidth(250)
         self._left_frame_a_layout = QVBoxLayout()
 
         self._json_list_window = QListWidget()
         # setStatusTip or setToolTip
-        self._json_list_window.setToolTip('双击加载当前语料的语料概况')
+        self._json_list_window.setToolTip(self.fc_dict["corpora_list_tip"][self.fc_lg])
         self._json_list_window.setMaximumWidth(240)
         self._json_list_window.setSortingEnabled(True)
         self._json_list_window.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -78,28 +84,28 @@ class UIMainWindow(QMainWindow):
         self._left_frame_a_layout.addWidget(self._json_list_window)
         self._left_frame_a.setLayout(self._left_frame_a_layout)
 
-        self._left_frame_b = QGroupBox('检索选项')
+        self._left_frame_b = QGroupBox(self.fc_dict["conc_options"][self.fc_lg])
         self._left_frame_b.setMaximumWidth(250)
         self._left_frame_b_layout = QVBoxLayout()
 
         self._input_layout = QHBoxLayout()
         self._input_box = QLineEdit()
         self._input_box.setFixedWidth(150)
-        self._input_button = QPushButton('检索')
+        self._input_button = QPushButton(self.fc_dict["src_button"][self.fc_lg])
         self._input_button.clicked.connect(self.search)
         self._input_button.setFixedWidth(80)
         self._input_layout.addWidget(self._input_box)
         self._input_layout.addWidget(self._input_button)
 
         self._src_mode = QButtonGroup()
-        self._src_mode_list = QLabel('检索方式：')
-        self._src_mode_1 = QRadioButton('普通检索')
-        self._src_mode_1.setToolTip('按输入检索词原样进行精确搜索')
-        self._src_mode_2 = QRadioButton('拓展检索')
-        self._src_mode_2.setToolTip('对输入词汇进行词形还原、忽略大小写等多重模糊搜索')
+        self._src_mode_list = QLabel(self.fc_dict["conc_mode"][self.fc_lg])
+        self._src_mode_1 = QRadioButton(self.fc_dict["conc_mode_gm"][self.fc_lg])
+        self._src_mode_1.setToolTip(self.fc_dict["conc_mode_gm_tip"][self.fc_lg])
+        self._src_mode_2 = QRadioButton(self.fc_dict["conc_mode_em"][self.fc_lg])
+        self._src_mode_2.setToolTip(self.fc_dict["conc_mode_em_tip"][self.fc_lg])
         self._src_mode_2.setChecked(True)
-        self._src_mode_3 = QRadioButton('正则检索')
-        self._src_mode_3.setToolTip('根据输入的正则表达式进行模糊搜索')
+        self._src_mode_3 = QRadioButton(self.fc_dict["conc_mode_regex"][self.fc_lg])
+        self._src_mode_3.setToolTip(self.fc_dict["conc_mode_regex_tip"][self.fc_lg])
         self._src_mode.addButton(self._src_mode_1)
         self._src_mode.addButton(self._src_mode_2)
         self._src_mode.addButton(self._src_mode_3)
@@ -112,27 +118,27 @@ class UIMainWindow(QMainWindow):
 
         self._src_category = QButtonGroup()
 
-        self._src_scope_list = QLabel('检索范围：')
-        self._src_scope_1 = QRadioButton('全部语料')
-        self._src_scope_1.setToolTip('对语料列表内所有语料进行检索')
+        self._src_scope_list = QLabel(self.fc_dict["conc_scope"][self.fc_lg])
+        self._src_scope_1 = QRadioButton(self.fc_dict["conc_scope_all"][self.fc_lg])
+        self._src_scope_1.setToolTip(self.fc_dict["conc_scope_all_tip"][self.fc_lg])
         self._src_scope_1.setChecked(True)
-        self._src_scope_2 = QRadioButton('当前语料')
-        self._src_scope_2.setToolTip('仅检索语料概况中展示的篇章内容，可通过点选内容列表进一步缩小检索范围')
+        self._src_scope_2 = QRadioButton(self.fc_dict["conc_scope_this"][self.fc_lg])
+        self._src_scope_2.setToolTip(self.fc_dict["conc_scope_this_tip"][self.fc_lg])
         self._src_scope_3 = QComboBox()
         self._src_scope_3.setEnabled(False)
-        self._src_scope_3.addItem('全部译本')
-        self._src_scope_3.addItem('当前译本')
+        self._src_scope_3.addItem(self.fc_dict["conc_scope_tls"][self.fc_lg])
+        self._src_scope_3.addItem(self.fc_dict["conc_scope_this_tl"][self.fc_lg])
         self._src_scope_3.setCurrentIndex(0)
 
-        self._src_author_btn = QRadioButton('指定作者')
+        self._src_author_btn = QRadioButton(self.fc_dict["conc_author"][self.fc_lg])
         self._src_author_opt = QComboBox()
         self._src_author_opt.setEnabled(False)
 
-        self._src_translator_btn = QRadioButton('指定译者')
+        self._src_translator_btn = QRadioButton(self.fc_dict["conc_translator"][self.fc_lg])
         self._src_translator_opt = QComboBox()
         self._src_translator_opt.setEnabled(False)
 
-        self._src_genre_btn = QRadioButton('指定类型')
+        self._src_genre_btn = QRadioButton(self.fc_dict["conc_genre"][self.fc_lg])
         self._src_genre_opt = QComboBox()
         self._src_genre_opt.setEnabled(False)
 
@@ -142,26 +148,26 @@ class UIMainWindow(QMainWindow):
         self._src_category.addButton(self._src_translator_btn)
         self._src_category.addButton(self._src_genre_btn)
 
-        self._display_context_label = QLabel('显示方式：')
-        self._display_context_button = QCheckBox('展示语境')
-        self._display_context_button.setToolTip('同时展示检索句所在语段的具体内容')
+        self._display_context_label = QLabel(self.fc_dict["display_opt"][self.fc_lg])
+        self._display_context_button = QCheckBox(self.fc_dict["display_opt_context"][self.fc_lg])
+        self._display_context_button.setToolTip(self.fc_dict["display_opt_context_tip"][self.fc_lg])
         self._display_context_button.setChecked(False)
         self._display_context_choice = QComboBox()
         self._display_context_choice.setEnabled(False)
-        self._display_context_choice.addItem('原文语境')
-        self._display_context_choice.addItem('译文语境')
-        self._display_context_choice.addItem('双语语境')
+        self._display_context_choice.addItem(self.fc_dict["display_opt_context_sl"][self.fc_lg])
+        self._display_context_choice.addItem(self.fc_dict["display_opt_context_tl"][self.fc_lg])
+        self._display_context_choice.addItem(self.fc_dict["display_opt_context_bi"][self.fc_lg])
         self._display_context_choice.setCurrentIndex(0)
 
-        self._display_source_button = QCheckBox('隐藏语源')
-        self._display_source_button.setToolTip('不展示检索句作（译）者或其他语料来源信息')
+        self._display_source_button = QCheckBox(self.fc_dict["hide_source"][self.fc_lg])
+        self._display_source_button.setToolTip(self.fc_dict["hide_source_tip"][self.fc_lg])
         self._display_source_button.setChecked(False)
         self._display_source_choice = QComboBox()
         self._display_source_choice.setEnabled(False)
-        self._display_source_choice.addItem('作者')
-        self._display_source_choice.addItem('译者')
-        self._display_source_choice.addItem('作(译)者')
-        self._display_source_choice.addItem('作品名称')
+        self._display_source_choice.addItem(self.fc_dict["hide_source_ar"][self.fc_lg])
+        self._display_source_choice.addItem(self.fc_dict["hide_source_tr"][self.fc_lg])
+        self._display_source_choice.addItem(self.fc_dict["hide_source_ar_tr"][self.fc_lg])
+        self._display_source_choice.addItem(self.fc_dict["hide_source_title"][self.fc_lg])
         self._display_source_choice.setCurrentIndex(0)
 
         self._src_scope_layout = QGridLayout()
@@ -189,33 +195,33 @@ class UIMainWindow(QMainWindow):
         self._left_frame_layout.addLayout(self._input_layout)
         self._left_frame_layout.addWidget(self._left_frame_b)
 
-        self._json_info_form = QGroupBox('语料概况')
+        self._json_info_form = QGroupBox(self.fc_dict["corpus_pro"][self.fc_lg])
         self._json_info_form.setAlignment(Qt.AlignRight)
 
         self._book_header_layout = QGridLayout()
-        self._ss_book_title = QLabel('标题：')
+        self._ss_book_title = QLabel(self.fc_dict["corpus_pro_title"][self.fc_lg])
         self._ss_book_titleBox = QLineEdit()
-        self._ss_book_author = QLabel('作者：')
+        self._ss_book_author = QLabel(self.fc_dict["corpus_pro_author"][self.fc_lg])
         self._ss_book_authorBox = QLineEdit()
-        self._ss_book_date = QLabel('年代：')
+        self._ss_book_date = QLabel(self.fc_dict["corpus_pro_date"][self.fc_lg])
         self._ss_book_dateBox = QLineEdit()
         #缩小宽度，以防止contentsBox出现左右拉横条
         self._ss_book_dateBox.setFixedWidth(115)
-        self._ss_book_genre = QLabel('类型：')
+        self._ss_book_genre = QLabel(self.fc_dict["corpus_pro_genre"][self.fc_lg])
         self._ss_book_genreBox = QLineEdit()
         #缩小宽度，以防止contentsBox出现左右拉横条
         self._ss_book_genreBox.setFixedWidth(115)
         self._ss_book_contentsBox = QListWidget()
-        self._ss_book_contentsBox.setToolTip('双击查看内容，单击或Ctrl+单击可单选或复选检索范围，勿拖选')
+        self._ss_book_contentsBox.setToolTip(self.fc_dict["corpus_pro_content_tip"][self.fc_lg])
         #self.ss_book_contentsBox.setSortingEnabled(True)  # 排序会导致章节排序错误
         #限定高度
         self._ss_book_contentsBox.setFixedHeight(100)
         self._ss_book_contentsBox.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self._ss_book_contentsBox.setContextMenuPolicy(Qt.CustomContextMenu)
 
-        self._tt_book_list = QLabel('译本：')
+        self._tt_book_list = QLabel(self.fc_dict["corpus_pro_tlvn"][self.fc_lg])
         self._tt_book_listBox = QComboBox()
-        self._tt_book_listBox.setToolTip('此处选定的译本将做为当前译本参与当前语料检索')
+        self._tt_book_listBox.setToolTip(self.fc_dict["corpus_pro_tlvn_tip"][self.fc_lg])
         self._book_header_layout.addWidget(self._ss_book_title, 0, 0)
         self._book_header_layout.addWidget(self._ss_book_titleBox, 0, 1, 1, 3)
         self._book_header_layout.addWidget(self._ss_book_author, 1, 0)
@@ -229,7 +235,7 @@ class UIMainWindow(QMainWindow):
         self._book_header_layout.addWidget(self._ss_book_contentsBox, 0, 4, 4, 1)
         self._json_info_form.setLayout(self._book_header_layout)
 
-        self._src_result_form = QGroupBox('检索结果')
+        self._src_result_form = QGroupBox(self.fc_dict["conc_result"][self.fc_lg])
         self._src_result_form.setAlignment(Qt.AlignCenter)
         # 用QTextBrowser取代QWebEngineView以减小软件体积
         # self._result_window = QWebEngineView(parent)
@@ -243,10 +249,10 @@ class UIMainWindow(QMainWindow):
         self._src_result_form.setLayout(self._src_result_formLayout)
 
         self._next_page_button=QPushButton()
-        self._next_page_button.setText('>>>>> 点击加载更多检索结果 <<<<<')
+        self._next_page_button.setText(self.fc_dict["next_button"][self.fc_lg])
         self._next_page_button.clicked[bool].connect(self.print_result)
         self._next_page_button.setDisabled(True)
-        self._next_page_button.setToolTip('分页展示每100组检索结果')
+        self._next_page_button.setToolTip(self.fc_dict["next_button_tip"][self.fc_lg])
 
         info_splitter = QSplitter(Qt.Vertical)
         info_splitter.addWidget(self._json_info_form)
@@ -266,15 +272,15 @@ class UIMainWindow(QMainWindow):
 
         # ----------创建主窗口状态栏----------
         self._statusBar = QStatusBar()
-        self._statusBar.showMessage('欢迎使用 傲飞一对多平行检索工具 V.1.0.0')
-        self._copyRightLabel = QLabel("© 2020 英语快餐厅 版权所有")
+        self._statusBar.showMessage(self.fc_dict["info_welcome"][self.fc_lg])
+        self._copyRightLabel = QLabel(self.fc_dict["info_copyright"][self.fc_lg])
         self._statusBar.addPermanentWidget(self._copyRightLabel)
         self.setStatusBar(self._statusBar)
 
         # ----------设置页面尺寸及标题等----------
         self.setGeometry(200, 50, 900, 610)
         self.setObjectName("MainWindow")
-        self.setWindowTitle("傲飞检索")
+        self.setWindowTitle(self.fc_dict["info_title"][self.fc_lg])
         currentDir = os.getcwd()
         # self.setWindowIcon(QIcon("./app_data/workfiles/myIcon.png"))
         self.setWindowIcon(QIcon(currentDir + "/app_data/workfiles/myIcon.png"))
@@ -299,6 +305,13 @@ class UIMainWindow(QMainWindow):
         self._left_frame_a.setMaximumWidth(350)
         self._json_list_window.setMaximumWidth(340)
         self._left_frame_b.setMaximumWidth(350)
+        
+    def set_lang(self):
+        with open (self._interface_lang_file, mode = 'r', encoding = 'utf-8-sig') as f:
+            default_lg = f.read().strip()
+        with open (self._interface_lang_dict, mode = 'r', encoding = 'utf-8-sig') as f:
+            lg_dict = json.loads(f.read())
+        return default_lg, lg_dict
 
     def load_result_window(self, img):        
         html='''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>index</title>\
@@ -367,9 +380,9 @@ class UIMainWindow(QMainWindow):
         # 当前语料
         if self._src_scope_2.isChecked():
             if self._corpus is None:
-                self.set_status_text("当前语料未加载，请先在语列料表中双击某具体语料，再进行当前语料检索。")
+                self.set_status_text(self.fc_dict["no_corpus_tip"][self.fc_lg])
                 return None, ''
-            if '全部译本' == self._src_scope_3.currentText():
+            if self.fc_dict["conc_scope_tls"][self.fc_lg] == self._src_scope_3.currentText():
                 return SearchType.CORPUS_KEY, self._corpus.key
             else:
                 chapter_titles = []
@@ -398,13 +411,8 @@ class UIMainWindow(QMainWindow):
         return self._display_source_choice.currentText() if self._display_source_button.isChecked() else ''
 
     def _info(self):
-        QMessageBox.about(self, "About Us",
-                          '''<p align='center'>傲飞一对多平行检索工具（傲飞检索）<br>
-                             OFA ParaConc<br>
-                            Windows 试用版 V.1.0.0<br>
-                          英语快餐厅 版权所有<br>
-                          软件制作：张修海 抚顺职业技术学院（抚顺师专）外语系<br>
-                          电子邮件：42716403@qq.com</p>''')
+        QMessageBox.about(self, self.fc_dict["about_us_window_title"][self.fc_lg],
+                          self.fc_dict["aboout_us_window_words"][self.fc_lg])
 
     def _json_list_window_item_double_clicked(self, item):
         self.load_corpus.emit(item.text())

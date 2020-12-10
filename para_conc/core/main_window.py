@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import os,re
+import os,re,json
 
 from para_conc.core.para_conc import ParaConc
 from para_conc.core.search.pandas_html_converter import PandasHtmlConverter
@@ -29,12 +29,15 @@ import time
 
 class MainWindow:
     def __init__(self):
+        
         currentDir = os.getcwd()
-
         dataDir = os.path.join(currentDir, "app_data")
         workFileDir = os.path.join(dataDir, "workfiles")
         self._outPutDir = os.path.join(currentDir, "savedfiles")
         self._starter_page_img = os.path.join(workFileDir, 'frontPage.png')
+        self._interface_lang_file = os.path.join(workFileDir,'interface_language_setting.txt')
+        self._interface_lang_dict = os.path.join(workFileDir,'interface_language_dict.json')
+        self.fc_lg, self.fc_dict = self.set_lang()           
 
         # input filter
         self._stopchar_en_list = "\,\.\:\"\'\*\^\# \$\@\!~\(\)\_\-\+\=\{\}\[\]\?\/\<\>\&\%\;\\"
@@ -72,8 +75,15 @@ class MainWindow:
         self._list_num=[]
         self._list_lang=[]
         self._list_cont=[]
-
+        #self.set_lang()
         self._ui.show()
+
+    def set_lang(self):
+        with open (self._interface_lang_file, mode = 'r', encoding = 'utf-8-sig') as f:
+            default_lg = f.read().strip()
+        with open (self._interface_lang_dict, mode = 'r', encoding = 'utf-8-sig') as f:
+            lg_dict = json.loads(f.read())
+        return default_lg, lg_dict
 
     def resetWindow(self):
         self._ui.load_result_window(self._starter_page_img)
@@ -105,7 +115,7 @@ class MainWindow:
         srcWord = self._ui.search_text()
         search_mode = self._ui.search_mode()
         if srcWord == "":
-            self._ui.set_status_text("检索词不能为空，请重新输入！")
+            self._ui.set_status_text(self.fc_dict["src_wrd_warning_blank"][self.fc_lg])
             inputWord = ""
         elif SearchMode.REGEX == search_mode:
             inputWord = srcWord
@@ -113,16 +123,16 @@ class MainWindow:
             # to ensure no regex appeared in other mode
             m=re.search(self._regex_char_regex,srcWord)
             if m:
-                self._ui.set_status_text("您输入了正则检索专用符号，如想进行正则检索，请点选相应选项")
+                self._ui.set_status_text(self.fc_dict["src_wrd_warning_regex"][self.fc_lg])
                 inputWord=""
             else:
                 # strip here to remove spaces
                 srcWord=srcWord.strip()
                 if srcWord[0] in self._stopchar_en_list:
-                    self._ui.set_status_text("您输入了标点符号，如想进行正则检索，请点选相应选项")
+                    self._ui.set_status_text(self.fc_dict["src_wrd_warning_punc"][self.fc_lg])
                     inputWord = ""
                 elif srcWord[0] in self._stopchar_zh_list:
-                    self._ui.set_status_text("检索词不能为中文标点符号，请输入有效检索词")
+                    self._ui.set_status_text(self.fc_dict["src_wrd_warning_punc_zh"][self.fc_lg])
                     inputWord = ""
                 else:
                     inputWord = srcWord
@@ -152,11 +162,11 @@ class MainWindow:
         self._show_context_original = False
         self._show_context_translation = False
         display_context = self._ui.display_context()
-        if display_context == '原文语境':
+        if display_context == self.fc_dict["display_opt_context_sl"][self.fc_lg]:
             self._show_context_original = True
-        if display_context == '译文语境':
+        if display_context == self.fc_dict["display_opt_context_tl"][self.fc_lg]:
             self._show_context_translation = True
-        if display_context == '双语语境':
+        if display_context == self.fc_dict["display_opt_context_bi"][self.fc_lg]:
             self._show_context_original = True
             self._show_context_translation = True
         # hide source options
@@ -164,14 +174,14 @@ class MainWindow:
         self._show_source_translator = True
         self._show_source_title = True
         display_source = self._ui.display_source()
-        if display_source == '作者':
+        if display_source == self.fc_dict["hide_source_ar"][self.fc_lg]:
             self._show_source_author = False
-        if display_source == '译者':
+        if display_source == self.fc_dict["hide_source_tr"][self.fc_lg]:
             self._show_source_translator = False
-        if display_source == '作(译)者':
+        if display_source == self.fc_dict["hide_source_ar_tr"][self.fc_lg]:
             self._show_source_author = False
             self._show_source_translator = False
-        if display_source == '作品名称':
+        if display_source == self.fc_dict["hide_source_title"][self.fc_lg]:
             self._show_source_title = False
         # result display
         if len(self._search_result.items):
@@ -212,11 +222,12 @@ class MainWindow:
             # current concordance report
             total_sents = str(len(self._list_num))
             total_set = str(self._list_num[-1])
-            self._ui.set_status_text(f"共检索到{total_set}组双语数据，总计{total_sents}条记录")
+            info = self.fc_dict["src_record_true"][self.fc_lg]
+            self._ui.set_status_text(f"{info}")
             
         else:
             self.resetWindow()
-            self._ui.set_status_text('未检索到任何数据')
+            self._ui.set_status_text(self.fc_dict["src_record_null"][self.fc_lg])
 
     # next page function
     def print_result(self):
@@ -247,11 +258,12 @@ class MainWindow:
                 self._ui._next_page_button.setDisabled(False)
             else:
                 self._ui._next_page_button.setDisabled(True)
-            self._ui.set_status_text(f"共检索到{total_set}组双语数据，总计{total_sents}条记录")
+            info = self.fc_dict["src_record_true"][self.fc_lg]
+            self._ui.set_status_text(f"{info}")
         else:
             self.resetWindow()
             self._ui.set_result_html('')
-            self._ui.set_status_text('未检索到任何数据')
+            self._ui.set_status_text(self.fc_dict["src_record_null"][self.fc_lg])
 
     # output to txt
     def saveTxt(self):
@@ -261,9 +273,9 @@ class MainWindow:
             lines = self._text_converter.convert(self._list_num, self._list_lang, self._list_cont)
             with open(file_id, 'w', encoding='utf-8') as f:
                 f.write(lines)
-            self._ui.set_status_text('当前检索结果已成功输出为txt文本文件。')
+            self._ui.set_status_text(self.fc_dict["output_report_ok_txt"][self.fc_lg])
         else:
-            self._ui.set_status_text('当前未有任何检索结果可供输出。')
+            self._ui.set_status_text(self.fc_dict["output_report_fail"][self.fc_lg])
 
     # output to html
     def saveHtml(self):
@@ -274,6 +286,6 @@ class MainWindow:
             # encoding is indispensible here.
             with open(file_id, 'w', encoding='utf-8') as f:
                 f.write(tm_html)
-            self._ui.set_status_text('当前检索结果已成功输出为html网页文件。')
+            self._ui.set_status_text(self.fc_dict["output_report_ok_html"][self.fc_lg])
         else:
-            self._ui.set_status_text('当前未有任何检索结果可供输出。')
+            self._ui.set_status_text(self.fc_dict["output_report_fail"][self.fc_lg])

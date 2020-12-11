@@ -223,7 +223,7 @@ class MainWindow:
             total_sents = str(len(self._list_num))
             total_set = str(self._list_num[-1])
             if self.fc_lg == 'en':
-                self._ui.set_status_text(f"{total_set} pairs of bi-text and {total_sents} sents of results are found)
+                self._ui.set_status_text(f"{total_set} pairs of bi-text and {total_sents} sents of results are found")
             else:
                 self._ui.set_status_text(f"本次检索共得到{total_set} 组 {total_sents}条结果")
         else:

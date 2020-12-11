@@ -222,9 +222,10 @@ class MainWindow:
             # current concordance report
             total_sents = str(len(self._list_num))
             total_set = str(self._list_num[-1])
-            info = self.fc_dict["src_record_true"][self.fc_lg]
-            self._ui.set_status_text(f"{info}")
-            
+            if self.fc_lg == 'en':
+                self._ui.set_status_text(f"{total_set} pairs of bi-text and {total_sents} sents of results are found)
+            else:
+                self._ui.set_status_text(f"本次检索共得到{total_set} 组 {total_sents}条结果")
         else:
             self.resetWindow()
             self._ui.set_status_text(self.fc_dict["src_record_null"][self.fc_lg])
@@ -258,8 +259,10 @@ class MainWindow:
                 self._ui._next_page_button.setDisabled(False)
             else:
                 self._ui._next_page_button.setDisabled(True)
-            info = self.fc_dict["src_record_true"][self.fc_lg]
-            self._ui.set_status_text(f"{info}")
+            if self.fc_lg == 'en':
+                self._ui.set_status_text(f"{total_set} pairs of bi-text and {total_sents} sents of results are found")
+            else:
+                self._ui.set_status_text(f"本次检索共得到{total_set} 组 {total_sents}条结果")
         else:
             self.resetWindow()
             self._ui.set_result_html('')

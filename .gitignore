@@ -1,6 +1,9 @@
 .idea/
 *.imp
+*.ico
+*.spec
 savedfiles/*
+img_storage/*
 !savedfiles/.gitkeep
 app_data/corpus/*
 !app_data/corpus/sample_*.json
